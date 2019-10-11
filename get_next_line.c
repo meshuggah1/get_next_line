@@ -1,4 +1,3 @@
-##include <stdio.h>
 #include <stdio.h>
 #include "libft.h"
 #include "get_next_line.h"
@@ -13,11 +12,9 @@ void     	del(void *ptr, size_t s)
 char		*get_text_from_list_to_line(t_list *src, char *dst)
 {
 	t_list	*tmp;
-
 	tmp = src;
 	ft_lstiter(src)
 	dst = ft_strcpy(dst, *(src->content));
-
 	ft_lstdelone(&src, del);
 }
 */
@@ -27,6 +24,7 @@ int		check_buf(char *buf, const int fd)
     size_t i;
     int lineRead;
     char *before_n;
+    char **tab;
 
     before_n = buf;          // отсюда будем брать для списка часть строки до \n
     lineRead = 0;
@@ -57,10 +55,22 @@ int		check_buf(char *buf, const int fd)
             printf("смотрю в fd_list, там %p\n", fd_list[fd]);
 
             //   free(before_n);
+
         }
         if (ft_isprint(*buf))              // если в буфере после \n что-то осталось, кладем остаток в список
         {
-            if (fd_list[fd] == NULL)
+            if (buf[i] == '\n' && buf[i + 1])   // если в огрызке за \n есть еще символы,
+            {
+                tab = ft_strsplit(buf,'\n');
+                while (*tab)
+                {
+                    ft_lstadd(&(fd_list[fd]), ft_lstnew(*tab, ft_strlen(*tab)));
+                    tab++;
+                }
+            }
+
+
+            else if (fd_list[fd] == NULL)
                 fd_list[fd] = ft_lstnew(buf, ft_strlen(buf));
             else  // возможно, этот else не нужен
                 ft_lstadd(&(fd_list[fd]), ft_lstnew(buf, ft_strlen(buf)));
@@ -148,12 +158,13 @@ int main()
  * На повестке дня:
  * 1) Чтобы работало с буфером размером 1, >7
  * С буфером больше 7, приставляет рандомный символ
+ * 2) НА даннный момент в список не добавляются \n;
+ * есть вариант отдельной функции, которая будет идти по подстроке до \n, копировать это все в новую строку и дойдя до \n -> передать эту строку ft_lstadd или ft_lstnew
  * The return value can be 1, 0 or -1 depending on whether a line has been read,
 when the reading has been completed, or if an error has happened respectively.
  *
  * There cannot be a main function in your program.
 • Do not push a Makefile.
-
  All heap allocated memory space must be properly freed when necessary.
 • Your project cannot have memory leaks.
  */

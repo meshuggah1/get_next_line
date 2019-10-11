@@ -22,7 +22,7 @@ char	*ft_wordalloc(char const *s, char c)
 	l = 0;
 	while (s[l] != c && s[l])
 		l++;
-	if (!(word = (char*)malloc(sizeof(char*) * l)))
+	if (!(word = (char*)malloc(sizeof(char) * l)))
 		return (NULL);
 	while (s[i] && s[i] != c)
 	{
