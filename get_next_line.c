@@ -1,165 +1,85 @@
-#include <stdio.h>
-#include "libft.h"
 #include "get_next_line.h"
-static t_list *fd_list[OPEN_MAX];
 
-void     	del(void *ptr, size_t s)
-{
-    free(ptr);
-    (void) s;
-}
-/*
-char		*get_text_from_list_to_line(t_list *src, char *dst)
-{
-	t_list	*tmp;
-	tmp = src;
-	ft_lstiter(src)
-	dst = ft_strcpy(dst, *(src->content));
-	ft_lstdelone(&src, del);
-}
-*/
+static char *fd_list[OPEN_MAX];
 
-int		check_buf(char *buf, const int fd)
+int        str_and_fd(char *ptr, char **line, int fd)
 {
     size_t i;
-    int lineRead;
-    char *before_n;
-    char **tab;
+    char *strcpy;
 
-    before_n = buf;          // отсюда будем брать для списка часть строки до \n
-    lineRead = 0;
+    strcpy = (char *)malloc(sizeof(char) * ft_strlen(ptr));
+    strcpy = ft_strcpy(strcpy, ptr);
     i = 0;
-    while (*buf != '\n' && *buf != '\0' && i < BUFF_SIZE)
-    {
-        printf("%zu-ый символ буфера = %c\n", i, *buf);
-        buf++;
+    //printf("str_and_fd: strcpy = %s, line = %s\n", strcpy, *line);
+    while (i < BUFF_SIZE && strcpy[i] != '\n')
         i++;
-    }
-    if (*buf == '\n')
-    {
-        lineRead = 1;
-        printf("нашел символ новой строки! теперь там ноль\n");
-        *buf = '\0';
-        buf++;
-        printf("перешел на след символ и это: %c\n", *buf);
-        printf("buf = %s\n", buf);
-        if (i > 0)                          // если i > 0, то в буфере перед \n что-то было, кладем это в список
-        {
-            if (fd_list[fd] == NULL)
-                fd_list[fd] = ft_lstnew(before_n, ft_strlen(before_n));
-            else // возможно, этот else не нужен
-                ft_lstadd(&(fd_list[fd]), ft_lstnew(before_n, ft_strlen(before_n)));
-            printf("в check_ buf: создан узел списка с адресом: %p\n", fd_list[fd]);
-            printf("в check_ buf: в нем: %s\n", fd_list[fd]->content);
-            printf("в check_ buf: указывает на: %p\n", fd_list[fd]->next);
-            printf("смотрю в fd_list, там %p\n", fd_list[fd]);
-
-            //   free(before_n);
-
-        }
-        if (ft_isprint(*buf))              // если в буфере после \n что-то осталось, кладем остаток в список
-        {
-            if (buf[i] == '\n' && buf[i + 1])   // если в огрызке за \n есть еще символы,
-            {
-                tab = ft_strsplit(buf,'\n');
-                while (*tab)
-                {
-                    ft_lstadd(&(fd_list[fd]), ft_lstnew(*tab, ft_strlen(*tab)));
-                    tab++;
-                }
-            }
-
-
-            else if (fd_list[fd] == NULL)
-                fd_list[fd] = ft_lstnew(buf, ft_strlen(buf));
-            else  // возможно, этот else не нужен
-                ft_lstadd(&(fd_list[fd]), ft_lstnew(buf, ft_strlen(buf)));
-            printf("в check_ buf: создан узел списка для огрызка с адресом: %p\n", fd_list[fd]);
-            printf("в check_ buf: в нем: %s\n", fd_list[fd]->content);
-            printf("в check_ buf: указывает на: %p\n", fd_list[fd]->next);
-        }
-    }
-    return (lineRead);
-}
-
-int			fromReadToList(const int fd)
-{
-    int ret;
-    char buf[BUFF_SIZE];
-    int lineR;
-
-    lineR = 0;
-    while ((ret = read(fd, buf, BUFF_SIZE))) // считали из файла в массив buf кол-во бафсайз (или меньше, если строка закончилась)
-    {
-        if (ret == -1)
-            return (ret);
-        printf("в буфере: %s\n", buf);
-        printf("проверяю буфер... \n");
-        lineR = check_buf(buf, fd);                               // проверка на наличие \n в буфере
-        if (fd_list[fd] == NULL)
-            fd_list[fd] = ft_lstnew(buf, BUFF_SIZE);
-        else if (ret != 1 && lineR != 1)                          // если остался только \n для него уже не создаем лист и если лист не был создан в check_buf
-            ft_lstadd(&(fd_list[fd]), ft_lstnew(buf, BUFF_SIZE)); // скопировали в узел списка из буфера часть строки
-        ft_bzero(buf, BUFF_SIZE);                                 // очистили буфер
-        printf("создан узел списка с адресом: %p\n", fd_list[fd]);
-        printf("в нем: %s\n", fd_list[fd]->content);
-        printf("указывает на: %p\n", fd_list[fd]->next);
-        if (lineR == 1)                                           // если в буфере была \n, строка считана
-            break;
-    }
-
-    if (ret == 0)
-        return (0);
+    if (!(**line))
+        *line = ft_strsub(strcpy, 0, i ); // кладем все до новой строки включительно
     else
+        *line = ft_strjoin(*line, ft_strsub(strcpy, 0, i));
+    if (strcpy[i] == '\n')
+    {
+        fd_list[fd] = &strcpy[i + 1]; // оставляем в fd_list хранить все, что после новой строки
         return (1);
+    }
+    return (0);
 }
 
 int			get_next_line(const int fd, char **line)
 {
     int ret;
+    char buf[BUFF_SIZE + 1];
 
+    ret = 0;
     if (fd < 0)
         return (-1);
-    ret = fromReadToList(fd);
-    //if file - >   OPEN IT
-    //if stdout - > fd == 1
-    //if stdin - >  fd == 0
+    if (fd_list[fd]) // если огрызок есть, сначала читаем его
+    {
+        //printf("огрызок на месте! = %s по адресу %p\n", fd_list[fd], &fd_list[fd]);
+        ret = str_and_fd(fd_list[fd], line, fd); // если вернули 1, то считали строку
+        if (ret)                    // в огрызке была новая строка - считали, можно выходить
+            return (1);
+    }
+    // далее идем если (1)огрызка не было или (2)в нем не было новой строки
 
-    //  *line = get_text_from_list_to_line(list, *line);
-    //
-    // add func for cleaning the list;
+    while ((ret = read(fd, buf, BUFF_SIZE))) // считали из файла в массив buf кол-во бафсайз (или меньше, если строка закончилась)
+    {
+        if (ret == -1)
+            return (ret);
+        // теперь нужно проверить есть ли уже начало строки (могли туда закинуть из огрызка)
+        buf[BUFF_SIZE] = '\0';
+        ret = str_and_fd(buf, line, fd);
+        // если в буфере была новая строка, вернем 1
+        ft_bzero(buf, BUFF_SIZE);
+        if (ret == 1)
+            break;
+    }
     return (ret);
 }
-
+/*
 int main()
 {
     int fd = open("a", O_RDONLY);
+    int fd1 = open("b", O_RDONLY);
 
     char *ptr = (char *)malloc(sizeof(*ptr) * 500);
     printf("ВЫЗОВ GNL ДЛЯ a...\n");
     get_next_line(fd, &ptr);
-    //printf("vyzov GNL dlya b...\n");
-    //get_next_line(open("b", O_RDONLY), &ptr);
+    printf("ptr = %s\n", ptr);
+    printf("vyzov GNL dlya b...\n");
+    get_next_line(fd1, &ptr);
     printf("ВЫЗОВ GNL ДЛЯ a... 2й раз\n");
     get_next_line(fd, &ptr);
-    //printf("vyzov GNL dlya b...\n");
-    //get_next_line(open("b", O_RDONLY), &ptr);
-    //<===== CHECK =====>
-    while(1)
-    {
-        printf("fd_list[fd].content = %s\n", fd_list[fd]->content);
-        fd_list[fd] = fd_list[fd]->next;
-        if (fd_list[fd] == NULL)
-            break;
-    }
-    //<===== CHECK =====>
-}
+    printf("vyzov GNL dlya b...\n");
+    get_next_line(fd1, &ptr);
+    printf("ptr = %s\n", ptr);
+
+    printf("ВЫЗОВ GNL ДЛЯ a... 3й раз\n");
+    get_next_line(fd, &ptr);
+    printf("ptr = %s\n", ptr);
+
+}*/
 /*
- * На повестке дня:
- * 1) Чтобы работало с буфером размером 1, >7
- * С буфером больше 7, приставляет рандомный символ
- * 2) НА даннный момент в список не добавляются \n;
- * есть вариант отдельной функции, которая будет идти по подстроке до \n, копировать это все в новую строку и дойдя до \n -> передать эту строку ft_lstadd или ft_lstnew
  * The return value can be 1, 0 or -1 depending on whether a line has been read,
 when the reading has been completed, or if an error has happened respectively.
  *
