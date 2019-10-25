@@ -10,11 +10,11 @@ int main()
     {
         printf("in main %d ", i++);
         printf("%s\n", line);
-        free(line);
+        ft_memdel((void **)&line);
     }
     //printf("%d ", i++);
     //printf("%s\n", line);
-    free(line);
+    ft_memdel((void **) &line);
     return (0);
 }
 //    int fd1 = open("b", O_RDONLY);

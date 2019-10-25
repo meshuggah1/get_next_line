@@ -9,27 +9,27 @@ int        str_and_fd(char *ptr, char **line, int fd)
     //ptr = сохранненая в fd_list часть строки или буфер с новой строкой
     //strcpy = (char *)malloc(sizeof(char) * ft_strlen(ptr));
     strcpy = ft_strdup(ptr);
+    printf("line adr after strdup= %p\n", strcpy);
     i = 0;
     printf("str_and_fd: strcpy = %s, strcpy address = %p\nline = %s, line address = %p */\n", strcpy, strcpy, *line, *line);
-    while (i < BUFF_SIZE && strcpy[i] != '\n')
+    while (i < BUFF_SIZE && strcpy[i] != '\n' && strcpy[i])
         i++;
     if (!(**line))
     {
-        *line = ft_strsub(strcpy, 0, i); // кладем все до новой строки включительно  ЗДЕСЬ МЕНЯЕТСЯ АДРЕС ЛАЙН
+        *line = ft_strsub(strcpy, 0, i); // кладем все до новой строки включительно
         printf("line created: %s\n", *line);
     }
     else {                                      // дополняем если в буфере поместилось меньше, чем строка до \n
         *line = ft_strjoin(*line, ft_strsub(strcpy, 0, i));
         printf("line joined: %s\n", *line);
     }
-    if (strcpy[i] == '\n' && strcpy[i + 1] != '\0')
-    {
+    if (strcpy[i] == '\n' && strcpy[i + 1] != '\0') {
         free(fd_list[fd]);
         fd_list[fd] = ft_strdup(&(strcpy[i + 1])); // оставляем в fd_list хранить все, что после новой строки
-        free(strcpy);
+        ft_memdel((void **)&strcpy);
         return (1);
     }
-    free(strcpy);
+    ft_memdel((void **)&strcpy);
     return (0);
 }
 
@@ -49,8 +49,7 @@ int			get_next_line(const int fd, char **line)
             return (1);
         // далее идем если (1)огрызка не было или (2)в нем не было новой строки
     }
-    while ((ret = read(fd, buf,
-                       BUFF_SIZE))) // считали из файла в массив buf кол-во бафсайз (или меньше, если строка закончилась)
+    while ((ret = read(fd, buf, BUFF_SIZE))) // считали из файла в массив buf кол-во бафсайз (или меньше, если строка закончилась)
     {
         if (ret == -1)
             return (ret);
