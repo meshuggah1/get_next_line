@@ -1,23 +1,25 @@
-#include <stdio.h>
 #include "get_next_line.h"
+# include <fcntl.h>
+#include <stdio.h>
 
 int main()
 {
     int fd = open("a", O_RDONLY);
 
-    char *line;
+    char **line;
     int gnl;
 
-    line = NULL;
-    while ((gnl = get_next_line(fd, &line)) > 0)
+    *line = NULL;
+
+    while ((gnl = get_next_line(fd, line)) > 0)
     {
         printf("%d ", gnl);
-        printf("%s\n", line);
+        printf("%s\n", *line);
         //printf("len = %d\n", strcmp(line, "123"));
-        free(line);
+        //free(line);
     }
     printf("%d ", gnl);
-    printf("%s\n", line);
-    // free(line);
+    //printf("%s\n", *line);
+    //free(*line);
     return (0);
 }

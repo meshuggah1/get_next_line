@@ -9,22 +9,22 @@ int        str_and_fd(char *ptr, char **line, char **o)
     //strcpy = (char *)malloc(sizeof(char) * ft_strlen(ptr));
     strcpy = ft_strdup(ptr);
     i = 0;
-    while (i < BUFF_SIZE && strcpy[i] != '\n' && strcpy[i])
+    while (i < BUFF_SIZE && strcpy[i] != '\n' && strcpy[i] != '\0')
         i++;
     if (!*line || !(**line))
         *line = ft_strsub(strcpy, 0, i); // кладем все до новой строки (или конца буфера) включительно
     else
         *line = ft_strjoin(*line, ft_strsub(strcpy, 0, i));  // дополняем если в буфере поместилось меньше, чем строка до \n
     if (strcpy[i + 1] == '\0')
-        ft_memdel((void**)o);
+        ft_strdel(o);
     if (strcpy[i] == '\n')
     {
         if (strcpy[i + 1] != '\0')
             *o = ft_strdup(&(strcpy[i + 1])); // оставляем в fd_list хранить все, что после новой строки
-        ft_memdel( (void **) &strcpy );
+        ft_strdel( &strcpy );
         return (1);
     }
-    // else if ()
+
     ft_memdel((void **)&strcpy);
     return (0);
 }
