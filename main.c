@@ -9,7 +9,10 @@ int main()
     char **line;
     int gnl;
 
-    *line = NULL;
+    line = (char **)malloc(sizeof(char *));
+    //*line = (char *)malloc(sizeof(char));
+
+    //line = NULL;
 
     while ((gnl = get_next_line(fd, line)) > 0)
     {
