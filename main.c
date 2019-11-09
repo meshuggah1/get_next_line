@@ -8,6 +8,7 @@ int main()
 
 	char **line;
 	int gnl;
+	line = ft_memalloc(1);;
 
 	while ((gnl = get_next_line(fd, line)) > 0)
 	{
@@ -16,6 +17,7 @@ int main()
 		free(*line);
 	}
 	printf("%d ", gnl);
-	free(*line);
+	if (gnl > 0)
+		free(*line);
 	return (0);
 }

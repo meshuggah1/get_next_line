@@ -81,7 +81,7 @@ int			get_next_line(const int fd, char **line)
 	int			ret;
 
 	ret = 0;
-	if (fd < 0 || !line)
+	if (fd < 0 || fd > OPEN_MAX - 1 || !line)
 		return (-1);
 	*line = ft_memalloc(1);
 	if (f_list[fd] && *f_list[fd])
