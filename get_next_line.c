@@ -1,73 +1,97 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: msimmons <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/11/08 19:33:03 by msimmons          #+#    #+#             */
+/*   Updated: 2019/11/08 19:38:47 by msimmons         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
-void        chars_to_line(char **line, char *strcpy, int i)
+void		chars_to_line(char **line, char *strcpy, int i)
 {
-	char *tmp;
+	char	*tmp;
+	char	*tmp2;
 
 	if (!*line || !(**line))
 	{
-		tmp = ft_strsub(strcpy, 0, i); // кладем все до новой строки (или конца буфера) включительно
-		free(*line);
-		*line = tmp;
+		tmp = ft_strsub(strcpy, 0, i);
+		ft_strdel(line);
+		*line = ft_strdup(tmp);
+		ft_strdel(&tmp);
 	}
 	else
 	{
-		tmp = ft_strjoin(*line, ft_strsub(strcpy, 0, i));  // дополняем если в буфере поместилось меньше, чем строка до \n
-		free(*line);
-		*line = tmp;
+		tmp2 = ft_strsub(strcpy, 0, i);
+		tmp = ft_strjoin(*line, tmp2);
+		ft_strdel(line);
+		*line = ft_strdup(tmp);
+		ft_strdel(&tmp);
+		ft_strdel(&tmp2);
 	}
 }
 
-int        str_and_fd(char *ptr, char **line, char **o)
+int			str_and_fd(char *ptr, char **line, char **o)
 {
-	size_t i;
-	char *strcpy;
+	size_t	i;
+	char	*tmp;
 
-	//ptr = сохранненая в fd_list часть строки или буфер с новой строкой
-	strcpy = ft_strdup(ptr);
+	tmp = ft_strdup(ptr);
 	i = 0;
-	while (i < BUFF_SIZE && strcpy[i] != '\n' && strcpy[i])
+	while (i < BUFF_SIZE && tmp[i] != '\n' && tmp[i])
 		i++;
-	chars_to_line(line, strcpy, i);
+	chars_to_line(line, tmp, i);
 	ft_strdel(o);
-	if (strcpy[i] == '\n')
+	if (tmp[i] == '\n')
 	{
-		*o = ft_strdup(&(strcpy[i + 1])); // оставляем в fd_list хранить все, что после новой строки
-		ft_strdel(&strcpy);
+		*o = ft_strdup(&(tmp[i + 1]));
+		ft_strdel(&tmp);
 		return (1);
 	}
-	ft_strdel(&strcpy);
+	ft_strdel(&tmp);
 	return (0);
+}
+
+int			read_fd(int fd, char **line, char *f_list[], char buf[])
+{
+	int ret;
+
+	ret = 0;
+	while ((ret = read(fd, buf, BUFF_SIZE)))
+	{
+		if (ret == -1)
+			return (-1);
+		buf[ret] = '\0';
+		ret = str_and_fd(buf, line, &f_list[fd]);
+		ft_bzero(buf, BUFF_SIZE);
+		if (ret == 1)
+			break ;
+	}
+	return (ret);
 }
 
 int			get_next_line(const int fd, char **line)
 {
-	static char *f_list[OPEN_MAX];
-	int ret;
-	char buf[BUFF_SIZE + 1];
+	static char	*f_list[OPEN_MAX];
+	char		buf[BUFF_SIZE + 1];
+	int			ret;
 
 	ret = 0;
 	if (fd < 0 || !line)
 		return (-1);
 	*line = ft_memalloc(1);
-	if (f_list[fd] && *f_list[fd])                                           // если огрызок есть, сначала читаем его
+	if (f_list[fd] && *f_list[fd])
 	{
-		ret = str_and_fd(f_list[fd], line, &f_list[fd]); // если вернули 1, то считали строку
-		if (ret)                                             // в огрызке была новая строка - считали, можно выходить
+		ret = str_and_fd(f_list[fd], line, &f_list[fd]);
+		if (ret)
 			return (1);
-		// далее идем если (1)огрызка не было или (2)в нем не было новой строки
 	}
-	while ((ret = read(fd, buf, BUFF_SIZE)))                 // считали из файла в массив buf кол-во бафсайз (или меньше, если строка закончилась)
-	{
-		if (ret == -1)
-			return (ret);
-		buf[ret] = '\0';
-		ret = str_and_fd(buf, line, &f_list[fd]);
-		ft_bzero(buf, BUFF_SIZE);
-		if (ret == 1)
-			break;
-	}
-	return (ret);
+	ret = read_fd(fd, line, f_list, buf);
+	return ((!ret && **line) ? 1 : ret);
 }
 
 /*

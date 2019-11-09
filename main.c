@@ -4,25 +4,18 @@
 
 int main()
 {
-    int fd = open("a", O_RDONLY);
+	int fd = open("a", O_RDONLY);
 
-    char **line;
-    int gnl;
+	char **line;
+	int gnl;
 
-    line = (char **)malloc(sizeof(char *));
-    //*line = (char *)malloc(sizeof(char));
-
-    //line = NULL;
-
-    while ((gnl = get_next_line(fd, line)) > 0)
-    {
-        printf("%d ", gnl);
-        printf("%s\n", *line);
-        //printf("len = %d\n", strcmp(line, "123"));
-        //free(line);
-    }
-    printf("%d ", gnl);
-    //printf("%s\n", *line);
-    //free(*line);
-    return (0);
+	while ((gnl = get_next_line(fd, line)) > 0)
+	{
+		printf("%d ", gnl);
+		printf("%s\n", *line);
+		free(*line);
+	}
+	printf("%d ", gnl);
+	free(*line);
+	return (0);
 }
